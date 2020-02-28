@@ -1,12 +1,15 @@
 import React from "react";
 
-import { observer } from "mobx-react";
+import { observer, inject } from "mobx-react";
 import Box from "../components/Box";
 
-function Canvas({ store }) {
+function Canvas(props) {
+  const { store } = props;
+
   return (
     <div className="canva">
-      {store.boxes.map((box, index) => (
+      {store.boxes.map((box, index) => { 
+        return (
         <Box
           id={box.id}
           key={index}
@@ -15,11 +18,14 @@ function Canvas({ store }) {
           top={box.top}
           width={box.width}
           height={box.height}
+          selected={box.selected}
           box={box}
         />
-      ))}
+      )})}
     </div>
   );
 }
 
-export default observer(Canvas);
+export default inject('store')(
+  observer(Canvas)
+);

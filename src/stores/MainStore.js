@@ -1,30 +1,54 @@
-import { types } from "mobx-state-tree";
+import { types, onSnapshot } from "mobx-state-tree";
+import { TimeTraveller } from "mst-middlewares"
 import uuid from "uuid/v4";
 import BoxModel from "./models/Box";
 import getRandomColor from "../utils/getRandomColor";
 
 const MainStore = types
   .model("MainStore", {
-    boxes: types.array(BoxModel)
+    boxes: types.array(BoxModel),
+    history: types.optional(TimeTraveller, { targetPath: "../boxes" })
   })
-  .actions(self => {
-    return {
-      addBox(box) {
-        self.boxes.push(box);
-      }
-    };
-  })
-  .views(self => ({}));
+  .actions(self => ({
+    addBox() {
+      const box = BoxModel.create({
+        id: uuid(),
+        color: getRandomColor(),
+        left: 0,
+        top: 0
+      });
 
-const store = MainStore.create();
+      self.boxes.push(box)
+    },
+    removeBox() {
+        self.boxes = self.boxes.filter(box => !box.selected )
+    },
 
-const box1 = BoxModel.create({
-  id: uuid(),
-  color: getRandomColor(),
-  left: 0,
-  top: 0
+    changeColor(color) {
+      self.boxes = self.boxes.map( box =>
+        box.selected
+          ? { ...box, color }
+          : box
+      )
+    }
+  }))
+  .views(self => ({
+    getSelectedBoxes() {
+      return self.boxes.filter(box => box.selected).length
+    },
+  }));
+
+const localStorageName = 'snapshots';
+
+const initialState = 
+  localStorage.getItem(localStorageName)
+    ? JSON.parse(localStorage.getItem(localStorageName))
+    : {};
+
+const store = MainStore.create(initialState);
+
+onSnapshot(store, (snapshot) => {
+  localStorage.setItem(localStorageName, JSON.stringify(snapshot));
 });
-
-store.addBox(box1);
 
 export default store;
