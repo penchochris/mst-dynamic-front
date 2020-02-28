@@ -1,5 +1,5 @@
 import { types, onSnapshot } from "mobx-state-tree";
-import { TimeTraveller } from "mst-middlewares"
+import { UndoManager } from "mst-middlewares"
 import uuid from "uuid/v4";
 import BoxModel from "./models/Box";
 import getRandomColor from "../utils/getRandomColor";
@@ -7,7 +7,7 @@ import getRandomColor from "../utils/getRandomColor";
 const MainStore = types
   .model("MainStore", {
     boxes: types.array(BoxModel),
-    history: types.optional(TimeTraveller, { targetPath: "../boxes" })
+    history: types.optional(UndoManager, {})
   })
   .actions(self => ({
     addBox() {
@@ -21,19 +21,28 @@ const MainStore = types
       self.boxes.push(box)
     },
     removeBox() {
-        self.boxes = self.boxes.filter(box => !box.selected )
+      self.boxes = self.boxes.filter(box => !box.selected )
     },
-
     changeColor(color) {
       self.boxes = self.boxes.map( box =>
         box.selected
           ? { ...box, color }
           : box
       )
-    }
+    },
+    moveAllSelected(deltaX, deltaY) {
+      self.boxes = self.boxes.map( box =>
+        box.selected
+          ? { ...box, left: box.left - deltaX, top: box.top - deltaY }
+          : box
+      )
+    },
   }))
   .views(self => ({
     getSelectedBoxes() {
+      return self.boxes.filter(box => box.selected)
+    },
+    countSelectedBoxes() {
       return self.boxes.filter(box => box.selected).length
     },
   }));

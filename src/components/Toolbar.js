@@ -4,7 +4,7 @@ import { observer, inject } from "mobx-react";
 function Toolbar(props) {
   const { store } = props;
   const {
-    getSelectedBoxes,
+    countSelectedBoxes,
     addBox,
     removeBox,
     changeColor,
@@ -13,7 +13,7 @@ function Toolbar(props) {
 
   const { undo, redo, canUndo, canRedo } = history;
   
-  const selectedBoxes = getSelectedBoxes();
+  const countSelected = countSelectedBoxes();
 
   const handleUndo = () => canUndo && undo();
   const handleRedo = () => canRedo && redo();
@@ -21,17 +21,17 @@ function Toolbar(props) {
   return (
     <div className="toolbar">
       <button onClick={addBox}>Add Box</button>
-      <button onClick={removeBox} disabled={!selectedBoxes}>Remove Box</button>
+      <button onClick={removeBox} disabled={!countSelected}>Remove Box</button>
       <input 
         type="color" 
-        disabled={!selectedBoxes} 
+        disabled={!countSelected} 
         onChange={e => changeColor(e.target.value)}
       />
       <button disabled={!canUndo} onClick={handleUndo}>Undo</button>
       <button disabled={!canRedo} onClick={handleRedo}>Redo</button>
       { 
-        selectedBoxes
-          ? <span>{selectedBoxes} selected</span>
+        countSelected
+          ? <span>{countSelected} selected</span>
           : <span>No boxes selected</span>
       }
     </div>

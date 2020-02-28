@@ -10,10 +10,13 @@ const BoxModel = types
     top: 100,
     selected: false,
   })
-  .views(self => ({}))
   .actions(self => ({
     toggleSelected() {
       self.selected = !self.selected;
+    },
+    move(left, top) {
+      self.left = left;
+      self.top = top;
     }
   }))
 export default BoxModel;
