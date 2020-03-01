@@ -1,72 +1,72 @@
-import React, { useState, useEffect, useCallback, useRef } from "react";
+import React, { Component, createRef } from 'react'
 import { observer, inject } from "mobx-react";
-
 import interact from 'interactjs';
 
-function BoxDraggable({
-  store,
-  box,
-  id,
-  top,
-  left,
-  width,
-  height,
-  color,
-  selected,
-  children,
-}) {
+class BoxDraggable extends Component {
 
-  const boxRef = useRef();
+  boxRef = createRef();
+  interactable = '';
 
-  const handleSelected = useCallback(() => box.toggleSelected(), [box]);
-
-  const handleOnMove = useCallback( event => {
-    const { current } = boxRef;
-
+  handleSelected = () => this.props.store.history.withoutUndo(() => 
+    this.props.box.toggleSelected()
+  );
+  
+  handleOnMove = event => {
+    const { current } = this.boxRef;
+    const { left, top, box, store } = this.props;
+    
     const x = parseFloat(current.getAttribute('data-x') || left) + event.dx;
     const y = parseFloat(current.getAttribute('data-y') || top) + event.dy;
-
-    current.style.webkitTransform = current.style.transform =
-      'translate(' + x + 'px, ' + y + 'px)';
-
-    current.setAttribute('data-x', x);
-    current.setAttribute('data-y', y);
-
-  }, [left, top]);
-
-  const handleOnEnd = useCallback( event => {
-    const { current } = boxRef;
-    const x = parseFloat(current.getAttribute('data-x'));
-    const y = parseFloat(current.getAttribute('data-y'));
     
     const deltaX = box.left - x;
     const deltaY = box.top - y;
+    
+    box.selected 
+    ? store.moveAllSelected(deltaX, deltaY)
+    : box.move(x, y);
+  };
+  
+  handleOnStart = () => {
+    const { store } = this.props;
+    store.history.startGroup(() => {});
+  }
+  handleOnEnd = () => {
+    const { store } = this.props;
+    store.history.stopGroup();
+  }
+  componentDidMount() {
+    const { current } = this.boxRef;
 
-    box.selected ? store.moveAllSelected(deltaX, deltaY) : box.move(x, y);
-  }, [box, store]);
+    this.interactable = interact(current);
 
-  useEffect(() => {
-    const { current } = boxRef;
-
-    interact(current)
+    this.interactable
       .draggable({
         modifiers: [
           interact.modifiers.restrictRect({
             restriction: 'parent',
           })
         ],
-        onmove: handleOnMove,
-        onend: handleOnEnd,
+        onstart: this.handleOnStart,
+        onmove: this.handleOnMove,
+        onend: this.handleOnEnd,
     })
-    .on('tap', handleSelected)
+    .on('tap', this.handleSelected)
 
-    return () => interact(current).unset();
-  }, [handleSelected, handleOnMove, handleOnEnd]);
+    
+  }
 
-  return (
-    <div
+  componentWillUnmount() {
+    this.interactable.unset();
+  }
+
+  render() {
+
+    const { id, color, width, height, selected, left, top, children } = this.props;
+
+    return (
+      <div
       id={id}
-      ref={boxRef}
+      ref={this.boxRef}
       className="box"
       style={{
         backgroundColor: color,
@@ -78,7 +78,8 @@ function BoxDraggable({
     >
       {children}
     </div>
-  );
+    )
+  }
 }
 
 export default inject('store')(
