@@ -1,9 +1,7 @@
+# Dynamic frontend
+This project is made to test MST, doing a dynamic frontend.
+
 # Technology included
-
-React
-mobx-state-tree
-interact.js
-
 ## mobx-state-tree (MST for short)
 https://github.com/mobxjs/mobx-state-tree
 
